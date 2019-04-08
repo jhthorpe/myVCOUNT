@@ -18,7 +18,7 @@ CONTAINS
 ! M             : int, number of states found
 ! error         : bool, exit if this becomes true
 
-SUBROUTINE level_gen(N,T,w,X,E,v,tolE,tolX,M,Z,E0,error)
+SUBROUTINE level_gen(N,T,w,X,E,v,tolE,tolX,M,Z,E0,B,error)
 
   IMPLICIT NONE
 
@@ -26,13 +26,13 @@ SUBROUTINE level_gen(N,T,w,X,E,v,tolE,tolX,M,Z,E0,error)
   INTEGER, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: v
   REAL(KIND=8), DIMENSION(0:,0:), INTENT(IN) :: X
   REAL(KIND=8), DIMENSION(0:), INTENT(IN) :: w
-  REAL(KIND=8), INTENT(INOUT) :: Z,E0
+  REAL(KIND=8), INTENT(INOUT) :: Z,E0,B
   REAL(KIND=8), INTENT(IN) :: T,tolE,tolX
   INTEGER, INTENT(INOUT) :: M
   LOGICAL, INTENT(INOUT) :: error
   INTEGER, INTENT(IN) :: N
 
-  REAL(KIND=8) :: B, kb
+  REAL(KIND=8) :: kb
   INTEGER :: treat
 
   error = .FALSE.
@@ -42,7 +42,7 @@ SUBROUTINE level_gen(N,T,w,X,E,v,tolE,tolX,M,Z,E0,error)
   WRITE(*,*) "---------------------------------------------------"
   WRITE(*,*) "Begining level counting"
 
-  treat = level_treat(N,X,tolX)
+  treat = level_treat(X,tolX)
   IF (treat .EQ. 0) THEN
    !CALL level_VPT2()
     IF (error) RETURN
@@ -87,13 +87,11 @@ SUBROUTINE level_HO(N,w,v,E,tolE,B,M,Z,E0,error)
   INTEGER :: key, maxkey
   LOGICAL :: oob
 
-  INTEGER :: i
-
   error = .FALSE.
   
   E0 = 0.5*SUM(w(0:N-1)) !harmonic ZPE  
-  !Emax = -1.0*LOG(tolE)/B + E0 !max energy relative to E0
-  Emax = -1.0*LOG(tolE)/B !max energy relative to E0
+  Emax = -1.0*LOG(tolE)/B + E0 !max energy relative to E0
+  !Emax = -1.0*LOG(tolE)/B !max energy relative to E0
   WRITE(*,*) "Generating harmonic vib states below (cm-1): ", Emax
   WRITE(*,*) "β = ", B
 
@@ -104,19 +102,19 @@ SUBROUTINE level_HO(N,w,v,E,tolE,B,M,Z,E0,error)
 
   E(0) = 0.0D0
   v(0,0:N-1) = 0
-  Z = 1.0
-  key = 1
+  Z = 0.0
+  key = 0
   vc = 0
   oob = .FALSE.
   CALL recur_HO(N-1,N,w,0.0D0,vc(0:N-1),Emax,key,maxkey,E,v,Z,E0,B,oob,error) 
-
-  WRITE(*,*) "We found ", key + 1, "vib states below Emax"
-  WRITE(*,*) "v0, v1, energy"
-  DO i=0,key - 1
-    WRITE(*,*) v(i,0:N-1), E(i)
-  END DO
-  M = key - 1
-  WRITE(*,*) "TESTING TESTING TESTING"
+  WRITE(*,*) 
+  WRITE(*,*) "There are ", key, "vib states below Emax"
+  !WRITE(*,*) "v0, v1, energy"
+  !DO i=0,key-1
+  !  WRITE(*,*) v(i,0:N-1), E(i)
+  !END DO
+  M = key
+  !WRITE(*,*) "TESTING TESTING TESTING"
 
 END SUBROUTINE level_HO
 
@@ -131,12 +129,11 @@ END SUBROUTINE level_HO
 ! X             : 2D real*8, list of couplings
 ! tolX          : real*8, tol for anharmonic vs harmonic  
 
-INTEGER FUNCTION level_treat(N,X,tolX)
+INTEGER FUNCTION level_treat(X,tolX)
   IMPLICIT NONE
   
   REAL(KIND=8), DIMENSION(0:,0:), INTENT(IN) :: X
   REAL(KIND=8), INTENT(IN) :: tolX
-  INTEGER, INTENT(IN) :: N
 
   IF (MAXVAL(X) .GT. tolX .OR. MINVAL(X) .LT. -tolX) THEN
     WRITE(*,*) 

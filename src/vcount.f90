@@ -30,8 +30,8 @@ PROGRAM vcount
   REAL(KIND=8), DIMENSION(:,:), ALLOCATABLE :: X
   REAL(KIND=8), DIMENSION(:), ALLOCATABLE :: E,w
   INTEGER, DIMENSION(:,:), ALLOCATABLE :: v
-  REAL(KIND=8) :: kb,T,B,tolE,tolX,Z,E0
-  INTEGER :: N,key,M
+  REAL(KIND=8) :: T,B,tolE,tolX,Z,E0
+  INTEGER :: N,M
   LOGICAL :: error
 
   WRITE(*,*) "==================================================="
@@ -48,7 +48,7 @@ PROGRAM vcount
     STOP 1 
   END IF
 
-  CALL level_gen(N,T,w,X,E,v,tolE,tolX,M,Z,E0,error)
+  CALL level_gen(N,T,w,X,E,v,tolE,tolX,M,Z,E0,B,error)
   IF (error) THEN
     CALL mem_clean(X,E,w,v)
     STOP 2

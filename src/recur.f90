@@ -34,29 +34,25 @@ RECURSIVE SUBROUTINE recur_HO(idx,N,w,Ec,vc,Emax,key,maxkey,E,v,Z,E0,B,oob,error
   LOGICAL, INTENT(INOUT) :: oob,error
   INTEGER, INTENT(IN) :: idx,N
 
-  INTEGER, DIMENSION(0:N-1) :: vn
   REAL(KIND=8) :: En
   INTEGER :: vmax,i      
 
   oob = .FALSE.
   error = .FALSE.
 
-  WRITE(*,*) 
-  WRITE(*,*) "-----------------------------"
-  WRITE(*,*) "recur_HO called"
-  WRITE(*,*) "idx = ", idx
-  WRITE(*,*) "Z = ", Z
-  WRITE(*,*) "Ec = ", Ec
-  WRITE(*,*) "vc..." 
-  DO i=0,N-1
-    WRITE(*,*) vc(i)
-  END DO
+  !WRITE(*,*) 
+  !WRITE(*,*) "-----------------------------"
+  !WRITE(*,*) "recur_HO called"
+  !WRITE(*,*) "idx = ", idx
+  !WRITE(*,*) "Z = ", Z
+  !WRITE(*,*) "Ec = ", Ec
+  !WRITE(*,*) "vc..." 
+  !DO i=0,N-1
+  !  WRITE(*,*) vc(i)
+  !END DO
  
- 
-  WRITE(*,*) "vmax will be", CEILING(((Emax - Ec)/w(idx)) - 0.5)
-
   IF (idx .EQ. 0) THEN !if we're at the last index to check
-    vmax = CEILING(((Emax - Ec)/w(idx)) - 0.5)
+    vmax = FLOOR((Emax - Ec)/w(idx))
 
     IF (vmax .LT. 0) THEN !if we cannot fill the level to below Emax
       oob = .TRUE.
@@ -65,27 +61,27 @@ RECURSIVE SUBROUTINE recur_HO(idx,N,w,Ec,vc,Emax,key,maxkey,E,v,Z,E0,B,oob,error
       DO i=0,vmax
         IF (key .EQ. maxkey) CALL grow(maxkey,N,E,v,error)
         IF (error) RETURN
-        En = Ec + w(idx)*(i + 0.5) !potentially could do this faster
+        En = Ec + w(idx)*i !this requires harmonic oscillator
         E(key) = En
         vc(idx) = i
         v(key,0:N-1) = vc(0:N-1)
         Z = Z + EXP(-B*(En))
         key = key + 1
-        WRITE(*,*) "idx, i", idx, i 
+        !WRITE(*,*) "idx, i", idx, i 
       END DO
 
     END IF
-    
+
   ELSE !we are not at the last index, add in data and call again
-    vmax = CEILING(((Emax - Ec)/w(idx)) - 0.5)
+    vmax = FLOOR((Emax - Ec)/w(idx))  !requires harmonic oscillator
     
     IF (vmax .LT. 0) THEN !we're out of bounds, go back
       oob = .TRUE.
 
     ELSE
       DO i=0,vmax
-         WRITE(*,*) "idx, i", idx, i 
-        En = Ec + w(idx)*(i+0.5)
+         !WRITE(*,*) "idx, i", idx, i 
+        En = Ec + w(idx)*i
         vc(idx) = i
         CALL recur_HO(idx-1,N,w(0:N-1),En,vc(0:N-1),Emax,key,maxkey,E,&
                       v,Z,E0,B,oob,error)
