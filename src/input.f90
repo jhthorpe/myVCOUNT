@@ -63,14 +63,15 @@ SUBROUTINE read_input(N,T,w,X,error)
   WRITE(*,*) "Number of vib modes         :", N
   WRITE(*,*) "Temperature (K)             :", T
   WRITE(*,*)
-  WRITE(*,*) "Harmonic frequencies (cm-1)"
+  WRITE(*,*) "Harmonic frequencies"
+  WRITE(*,*) " v     ω(cm-1)"
   DO i=0,N-1
-    WRITE(*,*) w(i)
+    WRITE(*,'(I3,2x,F8.2)') i+1,w(i)
   END DO
   WRITE(*,*)
   WRITE(*,*) "Anharmonic coupling matrix"
   DO i=0,N-1
-    WRITE(*,*) X(i,0:N-1)
+    WRITE(*,'(100(F11.8,2x))') X(i,0:N-1)
   END DO
 
   WRITE(*,*)

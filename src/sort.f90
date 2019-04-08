@@ -30,20 +30,11 @@ SUBROUTINE sort_print(N,M,Z,B,E0,E,v,error)
 
   error  = .FALSE.
 
-  !WRITE(*,*) "M is", M
-  !WRITE(*,*) "Priot to sort, E is..."
-  !WRITE(*,*) E(0:M-1)
   CALL quicksort(0,M-1,N,E(0:M-1),v(0:M-1,0:N-1))
 
-  WRITE(*,*) " B is", B
-
-  
-  !WRITE(*,*) EXP(-(10.-E0))
-  !WRITE(*,*) EXP(-B*(10.-E0))
-  !WRITE(*,*) EXP(-B*(10.-E0))/Z
-  WRITE(*,*) "vib state, energy, population"
+  WRITE(*,*) "Energy (cm-1), Population, vibrational state"
   DO i=0,M-1
-    WRITE(*,*) v(i,0:N-1),E(i), EXP(-B*E(i))/Z
+    WRITE(*,'(2x,F8.2,4x,F11.8,2x,100(1x,I3))') E(i), EXP(-B*E(i))/Z ,v(i,0:N-1)
   END DO 
 
 END SUBROUTINE sort_print
