@@ -61,6 +61,8 @@ PROGRAM vcount
   END IF
 
   CALL mem_clean(X,E,w,v)
+  WRITE(*,*) 
+  WRITE(*,*) "==================================================="
 
 CONTAINS
 

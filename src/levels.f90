@@ -44,7 +44,7 @@ SUBROUTINE level_gen(N,T,w,X,E,v,tolE,tolX,M,Z,E0,B,error)
 
   treat = level_treat(X,tolX)
   IF (treat .EQ. 0) THEN
-   !CALL level_VPT2()
+    CALL level_VPT2(N,w(0:N-1),X(0:N-1,0:N-1),v,E,tolE,B,M,Z,E0,error)
     IF (error) RETURN
   ELSE 
     CALL level_HO(N,w(0:N-1),v,E,tolE,B,M,Z,E0,error)
@@ -91,12 +91,12 @@ SUBROUTINE level_HO(N,w,v,E,tolE,B,M,Z,E0,error)
   
   E0 = 0.5*SUM(w(0:N-1)) !harmonic ZPE  
   Emax = -1.0*LOG(tolE)/B + E0 !max energy relative to E0
-  !Emax = -1.0*LOG(tolE)/B !max energy relative to E0
-  WRITE(*,*) "Generating harmonic vib states below (cm-1): ", Emax
+
+  WRITE(*,'(2x,A47,2x,F8.2)') "Zero-Point Vibrational Energy (cm-1)         : ", E0
+  WRITE(*,'(2x,A47,2x,F8.2)') "Largest allowed energy relative to ZPE (cm-1): ", Emax
   WRITE(*,*) "β = ", B
 
   maxkey = 128  !2^7just initial guess
-  !maxkey = 1 !2^0, testing purposes
   ALLOCATE(v(0:maxkey-1,0:N-1))
   ALLOCATE(E(0:maxkey-1))
 
@@ -109,14 +109,74 @@ SUBROUTINE level_HO(N,w,v,E,tolE,B,M,Z,E0,error)
   CALL recur_HO(N-1,N,w,0.0D0,vc(0:N-1),Emax,key,maxkey,E,v,Z,E0,B,oob,error) 
   WRITE(*,*) 
   WRITE(*,*) "There are ", key, "vib states below Emax"
-  !WRITE(*,*) "v0, v1, energy"
-  !DO i=0,key-1
-  !  WRITE(*,*) v(i,0:N-1), E(i)
-  !END DO
   M = key
-  !WRITE(*,*) "TESTING TESTING TESTING"
 
 END SUBROUTINE level_HO
+
+!------------------------------------------------------------
+! level_VPT2
+!       -generates energy levels using VPT2
+!------------------------------------------------------------
+! Variables
+! N             : int, nubmer of vibratinal modes
+! w             : 1D real*8, list of vibrational freq in cm-1
+! X             : 2D real*8, list of coupling constants
+! v             : 2D int, list of vibrational states
+! E             : 1D real*8, list of vibrational energies
+! tolE          : real*8, max total energy to consider 
+! B             : real*8, beta, 1/kb*T
+! error         : bool, exit if this becomes true
+
+SUBROUTINE level_VPT2(N,w,X,v,E,tolE,B,M,Z,E0,error)
+  USE recur
+  IMPLICIT NONE
+
+  REAL(KIND=8), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: E
+  INTEGER, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: v
+  REAL(KIND=8), DIMENSION(0:,0:), INTENT(IN) :: X
+  REAL(KIND=8), DIMENSION(0:), INTENT(IN) :: w 
+  REAL(KIND=8), INTENT(INOUT) :: Z,E0
+  REAL(KIND=8), INTENT(IN) :: tolE,B
+  INTEGER, INTENT(INOUT) :: M
+  LOGICAL, INTENT(INOUT) :: error
+  INTEGER, INTENT(IN) :: N
+
+  INTEGER, DIMENSION(0:N-1) :: vc
+  REAL(KIND=8) :: Emax
+  INTEGER :: key, maxkey,i,j
+  LOGICAL :: oob
+
+  error = .FALSE.
+  
+  E0 = 0.5*SUM(w(0:N-1))  !harmonic ZPE  
+  DO i=0,N-1
+    DO j=0,i
+      E0 = E0 + 0.25*X(i,j)
+    END DO
+  END DO
+  
+  Emax = -1.0*LOG(tolE)/B + E0 !max energy relative to E0
+  WRITE(*,'(2x,A47,2x,F8.2)') "Zero-Point Vibrational Energy (cm-1)         : ", E0
+  WRITE(*,'(2x,A47,2x,F8.2)') "Largest allowed energy relative to ZPE (cm-1): ", Emax
+  WRITE(*,*) " β = ", B
+
+  maxkey = 128  !2^7just initial guess
+  ALLOCATE(v(0:maxkey-1,0:N-1))
+  ALLOCATE(E(0:maxkey-1))
+
+  E(0) = 0.0D0
+  v(0,0:N-1) = 0
+  Z = 0.0
+  key = 0
+  vc = 0
+  oob = .FALSE.
+  CALL recur_VPT2(N-1,N,w(0:N-1),X(0:N-1,0:N-1),0.0D0,&
+                vc(0:N-1),Emax,key,maxkey,E,v,Z,E0,B,oob,error) 
+  WRITE(*,*) 
+  WRITE(*,*) "There are ", key, "vib states below Emax"
+  M = key
+
+END SUBROUTINE level_VPT2
 
 !------------------------------------------------------------
 ! level_treat

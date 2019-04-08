@@ -53,7 +53,7 @@ SUBROUTINE read_input(N,T,w,X,error)
   READ(100,*)
   DO i=0,N-1
     READ(100,*) X(i,0:i)
-    DO j=0,i-1
+    DO j=0,i
       X(j,i) = X(i,j)
     END DO
   END DO
@@ -71,7 +71,7 @@ SUBROUTINE read_input(N,T,w,X,error)
   WRITE(*,*)
   WRITE(*,*) "Anharmonic coupling matrix"
   DO i=0,N-1
-    WRITE(*,'(100(F11.8,2x))') X(i,0:N-1)
+    WRITE(*,'(100(F11.4,2x))') X(i,0:i)
   END DO
 
   WRITE(*,*)
